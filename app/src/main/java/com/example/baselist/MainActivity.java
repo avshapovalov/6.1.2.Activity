@@ -4,8 +4,12 @@ import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,13 +25,13 @@ public class MainActivity extends AppCompatActivity {
 
         SharedPreferences largeTextSharedPref = getSharedPreferences("LargeText", MODE_PRIVATE);
         SharedPreferences.Editor largeTextEditor = largeTextSharedPref.edit();
-        largeTextEditor.putString("LARGE_TEXT",getString(R.string.large_text));
+        largeTextEditor.putString("LARGE_TEXT", getString(R.string.large_text));
         largeTextEditor.apply();
 
         List<Map<String, String>> mapList = new ArrayList<>();
         String[] arrayContent = largeTextSharedPref.getString("LARGE_TEXT", "").split("\n\n");
 
-        for (String item:arrayContent) {
+        for (String item : arrayContent) {
             int arrayLength = item.length();
             Map<String, String> newMap = new HashMap<>();
             newMap.put("text", item);
@@ -35,10 +39,19 @@ public class MainActivity extends AppCompatActivity {
             mapList.add(newMap);
         }
 
-        ListView list = findViewById(R.id.list);
-        List<Map<String, String>> values = mapList;
-        SimpleAdapter listContentAdapter = createAdapter(values);
+        final ListView list = findViewById(R.id.list);
+        final List<Map<String, String>> values = mapList;
+        final SimpleAdapter listContentAdapter = createAdapter(values);
         list.setAdapter(listContentAdapter);
+
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View view,
+                                    int position, long id) {
+                values.remove(position);
+                listContentAdapter.notifyDataSetChanged();
+            }
+        });
+
     }
 
     @NonNull
