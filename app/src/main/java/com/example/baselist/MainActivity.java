@@ -2,6 +2,7 @@ package com.example.baselist;
 
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -18,6 +19,29 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
+
+    public void updateList() {
+        SharedPreferences largeTextSharedPref = getSharedPreferences("LargeText", MODE_PRIVATE);
+        SharedPreferences.Editor largeTextEditor = largeTextSharedPref.edit();
+        largeTextEditor.putString("LARGE_TEXT", getString(R.string.large_text));
+        largeTextEditor.apply();
+
+        List<Map<String, String>> mapList = new ArrayList<>();
+        String[] arrayContent = largeTextSharedPref.getString("LARGE_TEXT", "").split("\n\n");
+
+        for (String item : arrayContent) {
+            int arrayLength = item.length();
+            Map<String, String> newMap = new HashMap<>();
+            newMap.put("text", item);
+            newMap.put("length", Integer.toString(arrayLength));
+            mapList.add(newMap);
+        }
+
+        final ListView list = findViewById(R.id.list);
+        final List<Map<String, String>> values = mapList;
+        final SimpleAdapter listContentAdapter = createAdapter(values);
+        list.setAdapter(listContentAdapter);
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,6 +73,20 @@ public class MainActivity extends AppCompatActivity {
                                     int position, long id) {
                 values.remove(position);
                 listContentAdapter.notifyDataSetChanged();
+            }
+        });
+
+        final SwipeRefreshLayout swipeLayout = findViewById(R.id.swiperefresh);
+
+        swipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            // Будет вызван, когда пользователь потянет список вниз
+            @Override
+            public void onRefresh() {
+
+                updateList();
+                listContentAdapter.notifyDataSetChanged();
+                swipeLayout.setRefreshing(false);
+
             }
         });
 
