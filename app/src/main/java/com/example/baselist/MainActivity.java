@@ -1,16 +1,15 @@
 package com.example.baselist;
 
 import android.content.SharedPreferences;
-import android.support.annotation.NonNull;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
-import android.widget.TextView;
-import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,53 +18,40 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
+    private SharedPreferences largeTextSharedPref;
+    private SharedPreferences.Editor largeTextEditor;
+    private ListView list;
+    private List<Map<String, String>> values;
+    private SimpleAdapter listContentAdapter;
+    private SwipeRefreshLayout swipeLayout;
 
-    public void updateList() {
-        SharedPreferences largeTextSharedPref = getSharedPreferences("LargeText", MODE_PRIVATE);
-        SharedPreferences.Editor largeTextEditor = largeTextSharedPref.edit();
-        largeTextEditor.putString("LARGE_TEXT", getString(R.string.large_text));
-        largeTextEditor.apply();
-
-        List<Map<String, String>> mapList = new ArrayList<>();
+    public void updateList(SharedPreferences largeTextSharedPref) {
+        values.clear();
         String[] arrayContent = largeTextSharedPref.getString("LARGE_TEXT", "").split("\n\n");
-
         for (String item : arrayContent) {
             int arrayLength = item.length();
             Map<String, String> newMap = new HashMap<>();
             newMap.put("text", item);
             newMap.put("length", Integer.toString(arrayLength));
-            mapList.add(newMap);
+            values.add(newMap);
         }
-
-        final ListView list = findViewById(R.id.list);
-        final List<Map<String, String>> values = mapList;
-        final SimpleAdapter listContentAdapter = createAdapter(values);
-        list.setAdapter(listContentAdapter);
+        //return values;
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        SharedPreferences largeTextSharedPref = getSharedPreferences("LargeText", MODE_PRIVATE);
-        SharedPreferences.Editor largeTextEditor = largeTextSharedPref.edit();
+        largeTextSharedPref = getSharedPreferences("LargeText", MODE_PRIVATE);
+        largeTextEditor = largeTextSharedPref.edit();
         largeTextEditor.putString("LARGE_TEXT", getString(R.string.large_text));
         largeTextEditor.apply();
 
-        List<Map<String, String>> mapList = new ArrayList<>();
-        String[] arrayContent = largeTextSharedPref.getString("LARGE_TEXT", "").split("\n\n");
-
-        for (String item : arrayContent) {
-            int arrayLength = item.length();
-            Map<String, String> newMap = new HashMap<>();
-            newMap.put("text", item);
-            newMap.put("length", Integer.toString(arrayLength));
-            mapList.add(newMap);
-        }
-
-        final ListView list = findViewById(R.id.list);
-        final List<Map<String, String>> values = mapList;
-        final SimpleAdapter listContentAdapter = createAdapter(values);
+        list = findViewById(R.id.list);
+        values = new ArrayList<>();
+        updateList(largeTextSharedPref);
+        listContentAdapter = createAdapter(values);
         list.setAdapter(listContentAdapter);
 
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -76,20 +62,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        final SwipeRefreshLayout swipeLayout = findViewById(R.id.swiperefresh);
+        swipeLayout = findViewById(R.id.swiperefresh);
 
         swipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             // Будет вызван, когда пользователь потянет список вниз
             @Override
             public void onRefresh() {
-
-                updateList();
+                updateList(largeTextSharedPref);
                 listContentAdapter.notifyDataSetChanged();
                 swipeLayout.setRefreshing(false);
 
             }
         });
-
     }
 
     @NonNull
