@@ -6,11 +6,9 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +22,8 @@ public class MainActivity extends AppCompatActivity {
     private List<Map<String, String>> values;
     private SimpleAdapter listContentAdapter;
     private SwipeRefreshLayout swipeLayout;
+    private ArrayList<Integer> indexes = new ArrayList<>();
+    public static final String keyIndexes = "keyIndexes";
 
     public void updateList(SharedPreferences largeTextSharedPref) {
         values.clear();
@@ -35,7 +35,6 @@ public class MainActivity extends AppCompatActivity {
             newMap.put("length", Integer.toString(arrayLength));
             values.add(newMap);
         }
-        //return values;
     }
 
     @Override
@@ -57,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
+                indexes.add(position);
                 values.remove(position);
                 listContentAdapter.notifyDataSetChanged();
             }
@@ -84,5 +84,21 @@ public class MainActivity extends AppCompatActivity {
                 new String[]{"text", "length"},
                 new int[]{R.id.text, R.id.length}
         );
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putIntegerArrayList(keyIndexes, indexes);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        indexes = savedInstanceState.getIntegerArrayList(keyIndexes);
+        for (int i = 0; i < indexes.size(); i++) {
+            values.remove(indexes.get(i).intValue());
+        }
+        listContentAdapter.notifyDataSetChanged();
     }
 }
